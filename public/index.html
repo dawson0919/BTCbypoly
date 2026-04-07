@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+<title>₿ BTC 預測指數</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;800&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#020617;--card:#0f172a;--card2:#1e293b;--border:#334155;--text:#e2e8f0;--muted:#94a3b8;--dim:#64748b;--bull:#22c55e;--bear:#ef4444;--neutral:#f59e0b;--accent:#6366f1;--accent2:#8b5cf6;--mono:'JetBrains Mono',monospace;--sans:'Noto Sans TC',sans-serif}
+body{background:linear-gradient(180deg,var(--bg) 0%,var(--card) 30%,var(--bg) 100%);color:var(--text);font-family:var(--sans);min-height:100vh;-webkit-font-smoothing:antialiased}
+.header{background:linear-gradient(135deg,var(--card) 0%,#1e1b4b 50%,var(--card) 100%);border-bottom:1px solid var(--border);padding:16px 20px;position:sticky;top:0;z-index:100}
+.header-top{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.header h1{font-size:17px;font-weight:900;font-family:var(--mono);background:linear-gradient(135deg,var(--accent),var(--accent2),#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:1px}
+.header .sub{font-size:11px;color:var(--dim);margin-top:2px}
+.btn{font-family:var(--mono);font-size:11px;border-radius:6px;padding:6px 12px;cursor:pointer;border:1px solid;transition:all 0.2s}
+.btn-refresh{background:rgba(99,102,241,0.1);border-color:var(--accent);color:#a5b4fc}
+.btn-auto{border-color:var(--bull);color:var(--bull);background:rgba(34,197,94,0.1)}
+.btn-auto.off{border-color:var(--dim);color:var(--dim);background:rgba(100,116,139,0.1)}
+.meta{font-size:10px;color:#475569;margin-top:4px}
+.container{max-width:800px;margin:0 auto;padding:16px}
+.gauge-card{background:linear-gradient(135deg,var(--card) 0%,var(--card2) 100%);border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:16px;text-align:center}
+.signal-label{font-size:26px;font-weight:800;font-family:var(--mono);letter-spacing:2px;margin-top:-8px}
+.signal-meta{font-size:13px;color:var(--muted);margin-top:4px;font-family:var(--mono)}
+.action-box{padding:12px 20px;border-radius:8px;margin-top:14px;text-align:center}
+.action-text{font-size:16px;font-weight:700}
+.action-sub{font-size:11px;color:var(--muted);margin-top:4px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+.stat-card{background:var(--card);border:1px solid var(--card2);border-radius:12px;padding:12px;text-align:center}
+.stat-label{font-size:10px;color:var(--dim);font-family:var(--mono);letter-spacing:1px}
+.stat-value{font-size:22px;font-weight:800;font-family:var(--mono);margin-top:4px}
+.stat-sub{font-size:10px;color:var(--muted);margin-top:2px}
+.dist-card{background:var(--card);border:1px solid var(--card2);border-radius:12px;padding:16px;margin-bottom:16px}
+.dist-title{color:var(--text);font-size:13px;font-weight:700;font-family:var(--mono);letter-spacing:1px;margin-bottom:12px}
+.dist-bars{display:flex;align-items:flex-end;gap:4px;height:110px}
+.dist-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%}
+.dist-pct{font-size:9px;font-family:var(--mono);margin-bottom:3px}
+.dist-bar{width:100%;border-radius:4px 4px 0 0;min-height:4px;transition:height 0.5s}
+.dist-range{font-size:8px;color:var(--dim);font-family:var(--mono);margin-top:3px;text-align:center;line-height:1.2}
+.strategy-item{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:var(--card);border:1px solid var(--card2);border-radius:8px;margin-bottom:8px}
+.strat-name{font-size:14px;font-weight:600;font-family:var(--mono);color:var(--text)}
+.strat-desc{font-size:11px;color:var(--muted);margin-top:2px}
+.strat-risk{font-size:11px;font-weight:700;font-family:var(--mono);padding:2px 8px;border-radius:4px}
+.filters{display:flex;gap:8px;margin-bottom:14px;overflow-x:auto;padding-bottom:4px}
+.filter-btn{font-family:var(--mono);font-size:12px;padding:6px 14px;border-radius:20px;cursor:pointer;white-space:nowrap;border:1px solid var(--border);background:var(--card2);color:var(--muted);transition:all 0.2s}
+.filter-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.market-card{background:linear-gradient(135deg,var(--card) 0%,var(--card2) 100%);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px;transition:border-color 0.2s}
+.market-row{display:flex;justify-content:space-between;align-items:flex-start}
+.market-tags{display:flex;gap:6px;align-items:center;margin-bottom:6px}
+.tag{padding:2px 7px;border-radius:4px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:#fff}
+.tag-updown{background:var(--accent)}.tag-range{background:var(--accent2)}.tag-above_below{background:#06b6d4}
+.tag-tf{background:transparent;border:1px solid #475569;color:var(--muted)}
+.market-q{font-size:13px;color:var(--text);line-height:1.4;font-family:var(--mono)}
+.market-price{font-size:22px;font-weight:800;font-family:var(--mono)}
+.market-vol{font-size:11px;color:var(--dim);margin-top:2px}
+.prob-bar{margin-top:8px;height:4px;background:var(--card2);border-radius:2px;overflow:hidden}
+.prob-fill{height:100%;border-radius:2px;transition:width 0.5s}
+.method{background:var(--card);border:1px solid var(--card2);border-radius:12px;padding:16px;margin-top:20px}
+.method h3{color:var(--muted);font-size:13px;font-weight:700;font-family:var(--mono);margin-bottom:10px}
+.method p{font-size:12px;color:var(--dim);line-height:1.8;margin-bottom:6px}
+.method strong{color:#a5b4fc}.method .warn{color:var(--bear)}
+.history-card{background:var(--card);border:1px solid var(--card2);border-radius:12px;padding:16px;margin-bottom:16px}
+.history-chart{height:80px;display:flex;align-items:center;gap:1px}
+.history-bar{flex:1;border-radius:2px;min-width:2px;transition:height 0.3s}
+.loading{text-align:center;padding:60px 20px;color:var(--dim);font-size:14px}
+@media(max-width:480px){.header h1{font-size:15px}.stat-value{font-size:18px}.signal-label{font-size:22px}}
+</style>
+</head>
+<body>
+<div class="header">
+<div class="header-top">
+<div><h1>₿ POLYMARKET × BTC</h1><div class="sub">基於 Polymarket 下注機率即時運算交易信號</div></div>
+<div style="display:flex;gap:6px">
+<button class="btn btn-auto" id="autoBtn" onclick="toggleAuto()">● 自動</button>
+<button class="btn btn-refresh" id="refreshBtn" onclick="doRefresh()">⟳ 刷新</button>
+</div></div>
+<div class​​​​​​​​​​​​​​​​
